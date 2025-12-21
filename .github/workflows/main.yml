@@ -1,0 +1,84 @@
+name: DJango CI # 1. Workflow ati
+
+# 2. Qashan iske tusedi
+on:
+  push:
+    branches: [ "main" ]  # main tarmagina push qilinganda
+  pull_request:
+    branches: [ "main" ]  # main tarmagina pull request jiberilgende
+
+# 3. Jumislaw (Jobs)
+jobs: 
+  build-and-test:
+    # Vertuial computer turi (Ubuntu Linux)
+    runs-on: ubuntu-latest
+
+    # PostgrSQL servisi
+    services:
+      postgresql:
+        image: postgres:15-alpine
+        env:
+        POSTGRES_DB: test_db
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: password
+      ports:
+        - 5432:5432
+      # Baza toliq iske tuskenshe kutiw ushin tekseriw (Health check)
+      options: >-
+        --health-cmd pg_isready
+        --health-interval 10s
+        --health-timeout 5s
+        --health-retries 5
+    
+    # 4. Qademler (Steps)
+    steps:
+    # A) Kodti GitHub repozitoriyinen virual kompyuterden koshirip aliw
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # B) Python 3.9 di vertual kompyuterge ornatiw
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+    
+    # C) Kitapxanalardi ornatiw
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest pytest-django psycopg2-binary
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      # Tusindirme:
+      # 1. pip-ti janalaydi.
+      # 2. Test ushin kerek flake8 ham pytest-ti ornatadi.
+      # 3. requirements.txt bar bolsa, ondagi barliq kitapxanalardi ornatadi.
+
+    # D) Kod stilin tekseriw (Linter)
+    - name: Lint with flake8
+      run: |
+        # E9, F63, F7, F82 - bular sintaksis qatelikleri (kod islemeydi)
+        # Eger bular shiqsa, process toqtaydi.
+        flake8 . --count --select=E9, F63, F7, F82 --show-source --statistics
+
+        # Qalgan stil qatelikleri (misal, qatar uzinligi 120 belgiden kop bolsa)
+        # --exit-zero: Bul protses ushin process toqtamasin (tek eskertiw)
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+    
+    # E) Testlerdi iske tusiriw 
+    - name: Run Tests
+      env:
+        SECRET_KEY: 'test_key'
+        DEBUG: 'True'
+        ALLOWED_HOSTS: '127.0.0.1,localhost'
+        # Django settings.py ushin kerekli ozgeriwshiler
+        DB_NAME: 'test_db'
+        DB_USER: 'postgres'
+        DB_PASSWORD: 'password'
+        DB_HOST: 'localhost'  # GitHub Actions konteyner portin localhostqa baylanistiradi 
+        DB_PORT: '5432'
+      run: |
+        pytest
+
+    
+
+
