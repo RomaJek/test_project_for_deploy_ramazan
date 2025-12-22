@@ -5,7 +5,7 @@ from .models import Product, Category
 @pytest.fixture
 def test_category():
     return Category.objects.create(
-        name='Smarthphone',
+        name='Smarthphone'
     )
 
 def test_product(test_category):
