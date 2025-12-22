@@ -8,11 +8,11 @@ class ProductAPITests(APITestCase):
 
     def setUp(self):
         self.category = Category.objects.create(
-            name="smartphones"
+            name="smartphones",
         )
         self.product = Product.objects.create(
-            name='Samsung_A30s'
-            description='the best phone'
+            name='Samsung_A30s',
+            description='the best phone',
             price=99999999.99,
             category=self.category
         )
