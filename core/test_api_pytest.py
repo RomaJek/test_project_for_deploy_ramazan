@@ -17,7 +17,7 @@ def test_product(test_category):
     )
 
 @pytest.mark.django_db
-def test_list_products(client, test_products):
+def test_list_products(client, test_product):
     response = client.get('/api/products')
     assert response.status_code == status.HTTP_200_OK
 
